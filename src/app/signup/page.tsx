@@ -1,87 +1,114 @@
 "use client"
 
 import { useState } from "react"
-import { createUserWithEmailAndPassword } from "firebase/auth"
-import { auth } from "../firebase"
+import { createUserWithEmailAndPassword, signInWithPopup } from "firebase/auth"
+import { auth, googleProvider, database } from "../firebase"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
+import { toast } from "react-hot-toast"
+import { ref, set } from "firebase/database"
+import type React from "react" // Added import for React
 
 export default function SignUp() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
-  const [error, setError] = useState("")
+  const [firstName, setFirstName] = useState("")
+  const [lastName, setLastName] = useState("")
   const router = useRouter()
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const createUserProfile = async (uid: string, email: string, firstName: string, lastName: string) => {
+    await set(ref(database, `users/${uid}`), {
+      email,
+      firstName,
+      lastName,
+      gradeLevel: "",
+    })
+  }
+
+  const handleEmailSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
-      await createUserWithEmailAndPassword(auth, email, password)
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password)
+      await createUserProfile(userCredential.user.uid, email, firstName, lastName)
       router.push("/menu")
     } catch (error) {
-      setError("Failed to create an account")
+      toast.error("Failed to create an account. Please try again.")
+    }
+  }
+
+  const handleGoogleSignUp = async () => {
+    try {
+      const result = await signInWithPopup(auth, googleProvider)
+      const user = result.user
+      await createUserProfile(
+        user.uid,
+        user.email || "",
+        user.displayName?.split(" ")[0] || "",
+        user.displayName?.split(" ")[1] || "",
+      )
+      router.push("/menu")
+    } catch (error) {
+      console.error("Google sign-up error:", error)
+      toast.error(`Failed to sign up with Google: ${error.message}`)
     }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">Sign up for an account</h2>
-        </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <input type="hidden" name="remember" value="true" />
-          <div className="rounded-md shadow-sm -space-y-px">
-            <div>
-              <label htmlFor="email-address" className="sr-only">
-                Email address
-              </label>
-              <input
-                id="email-address"
-                name="email"
-                type="email"
-                autoComplete="email"
-                required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="Email address"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
+    <div className="flex justify-center items-center min-h-screen bg-gray-100">
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle>Create an account</CardTitle>
+          <CardDescription>Enter your details to sign up</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleEmailSignUp} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="firstName">First name</Label>
+                <Input id="firstName" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="lastName">Last name</Label>
+                <Input id="lastName" value={lastName} onChange={(e) => setLastName(e.target.value)} required />
+              </div>
             </div>
-            <div>
-              <label htmlFor="password" className="sr-only">
-                Password
-              </label>
-              <input
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <Input
                 id="password"
-                name="password"
                 type="password"
-                autoComplete="new-password"
-                required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                required
               />
             </div>
-          </div>
-
-          {error && <p className="mt-2 text-center text-sm text-red-600">{error}</p>}
-
-          <div>
-            <button
-              type="submit"
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-            >
+            <Button type="submit" className="w-full">
               Sign up
-            </button>
+            </Button>
+          </form>
+          <div className="mt-4">
+            <Button variant="outline" className="w-full" onClick={handleGoogleSignUp}>
+              Sign up with Google
+            </Button>
           </div>
-        </form>
-        <div className="text-center">
-          <Link href="/login" className="font-medium text-indigo-600 hover:text-indigo-500">
-            Already have an account? Log in
-          </Link>
-        </div>
-      </div>
+        </CardContent>
+        <CardFooter>
+          <p className="text-sm text-center w-full">
+            Already have an account?{" "}
+            <Link href="/login" className="text-blue-500 hover:underline">
+              Log in
+            </Link>
+          </p>
+        </CardFooter>
+      </Card>
     </div>
   )
 }

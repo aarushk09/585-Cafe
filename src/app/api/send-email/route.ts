@@ -8,7 +8,7 @@ export async function POST(req: Request) {
 
   try {
     const data = await resend.emails.send({
-      from: "585 Cafe <orders@yourdomain.com>",
+      from: "onboarding@resend.dev", 
       to,
       subject,
       text,
@@ -16,7 +16,8 @@ export async function POST(req: Request) {
 
     return NextResponse.json(data)
   } catch (error) {
-    return NextResponse.json({ error })
+    console.error("Error sending email:", error)
+    return NextResponse.json({ error: "Failed to send email" }, { status: 500 })
   }
 }
 

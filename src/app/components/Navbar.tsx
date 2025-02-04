@@ -5,7 +5,8 @@ import { useAuth } from "../AuthContext"
 import { signOut } from "firebase/auth"
 import { auth } from "../firebase"
 import { useRouter } from "next/navigation"
-import { LogOut, Coffee } from "lucide-react"
+import { User, LogOut, Coffee } from "lucide-react"
+import { Button } from "@/components/ui/button"
 
 export default function Navbar() {
   const { user, loading } = useAuth()
@@ -21,10 +22,10 @@ export default function Navbar() {
   }
 
   return (
-    <nav className="bg-indigo-600 text-white p-4 shadow-md">
-      <div className="container mx-auto flex justify-between items-center">
-        <Link href="/" className="text-2xl font-bold flex items-center">
-          <Coffee className="mr-2" />
+    <nav className="bg-white shadow-md">
+      <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+        <Link href="/" className="text-2xl font-bold text-gray-800 flex items-center">
+          <Coffee className="mr-2 text-blue-600" />
           585 Cafe
         </Link>
         <div className="space-x-4">
@@ -32,24 +33,29 @@ export default function Navbar() {
             <>
               {user ? (
                 <>
-                  <Link href="/menu" className="hover:text-indigo-200 transition-colors">
-                    Menu
-                  </Link>
-                  <Link href="/recent-orders" className="hover:text-indigo-200 transition-colors">
-                    Recent Orders
-                  </Link>
-                  <button onClick={handleSignOut} className="hover:text-indigo-200 transition-colors">
-                    <LogOut className="inline-block" />
-                  </button>
+                  <Button variant="ghost" asChild>
+                    <Link href="/menu">Menu</Link>
+                  </Button>
+                  <Button variant="ghost" asChild>
+                    <Link href="/recent-orders">Recent Orders</Link>
+                  </Button>
+                  <Button variant="ghost" asChild>
+                    <Link href="/profile">
+                      <User className="mr-2 h-4 w-4" /> Profile
+                    </Link>
+                  </Button>
+                  <Button variant="ghost" onClick={handleSignOut}>
+                    <LogOut className="mr-2 h-4 w-4" /> Sign Out
+                  </Button>
                 </>
               ) : (
                 <>
-                  <Link href="/login" className="hover:text-indigo-200 transition-colors">
-                    Log In
-                  </Link>
-                  <Link href="/signup" className="hover:text-indigo-200 transition-colors">
-                    Sign Up
-                  </Link>
+                  <Button variant="ghost" asChild>
+                    <Link href="/login">Log In</Link>
+                  </Button>
+                  <Button variant="default" asChild>
+                    <Link href="/signup">Sign Up</Link>
+                  </Button>
                 </>
               )}
             </>
