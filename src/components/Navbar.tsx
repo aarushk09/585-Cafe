@@ -1,13 +1,13 @@
 "use client"
 
 import Link from "next/link"
-import { useAuth } from "../AuthContext"
+import { useAuth } from "../app/AuthContext"
 import { signOut } from "firebase/auth"
 import { auth } from "../firebase"
 import { useRouter } from "next/navigation"
 import { User, LogOut, Coffee } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { isAdmin } from "../utils/adminUtils"
+import { isAdmin } from "../app/utils/adminUtils"
 
 export default function Navbar() {
   const { user, loading } = useAuth()
