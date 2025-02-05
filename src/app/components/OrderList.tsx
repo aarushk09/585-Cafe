@@ -90,7 +90,9 @@ export default function OrderList() {
       await update(ref(database, `orders/${selectedOrder.userId}/${selectedOrder.id}`), {
         isCompleted: true,
       })
-      await fetch("/api/send-email", {
+
+      // Send email to customer
+      const emailResponse = await fetch("/api/send-email", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -98,14 +100,31 @@ export default function OrderList() {
         body: JSON.stringify({
           to: selectedOrder.userEmail,
           subject: "Your order is ready for pickup!",
-          text: `Your order is ready for pickup! Thank you for using our service.`,
+          text: `Dear ${selectedOrder.firstName} ${selectedOrder.lastName},
+
+Your order is now ready for pickup!
+
+Order Details:
+${selectedOrder.items.map((item) => `${item.name} x ${item.quantity}: $${(item.price * item.quantity).toFixed(2)}`).join("\n")}
+
+Total: $${selectedOrder.total.toFixed(2)}
+
+Thank you for choosing our service. We look forward to serving you again soon!
+
+Best regards,
+The Gourmet Express Team`,
         }),
       })
-      toast.success("Order completed and email sent")
+
+      if (!emailResponse.ok) {
+        throw new Error("Failed to send email")
+      }
+
+      toast.success("Order completed and email sent to customer")
       setOrders(orders.filter((order) => order.id !== selectedOrder.id))
     } catch (error) {
       console.error("Error completing order:", error)
-      toast.error("Failed to complete order")
+      toast.error("Failed to complete order or send email")
     }
 
     setIsDialogOpen(false)

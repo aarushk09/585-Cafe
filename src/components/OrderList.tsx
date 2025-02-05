@@ -17,7 +17,6 @@ import {
 import { Check, Clock } from "lucide-react"
 import { useAuth } from "@/app/AuthContext"
 
-
 type OrderItem = {
   id: string
   name: string
@@ -29,6 +28,8 @@ type Order = {
   id: string
   userId: string
   userEmail: string
+  firstName: string
+  lastName: string
   items: OrderItem[]
   total: number
   date: string
@@ -41,13 +42,13 @@ export default function OrderList() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const { user, isAdmin } = useAuth()
+  const { user } = useAuth()
 
   useEffect(() => {
-    if (user && isAdmin) {
+    if (user) {
       fetchOrders()
     }
-  }, [user, isAdmin])
+  }, [user])
 
   const fetchOrders = async () => {
     setIsLoading(true)
@@ -89,7 +90,9 @@ export default function OrderList() {
       await update(ref(database, `orders/${selectedOrder.userId}/${selectedOrder.id}`), {
         isCompleted: true,
       })
-      await fetch("/api/send-email", {
+
+      // Send email to customer
+      const emailResponse = await fetch("/api/send-email", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -97,14 +100,31 @@ export default function OrderList() {
         body: JSON.stringify({
           to: selectedOrder.userEmail,
           subject: "Your order is ready for pickup!",
-          text: `Your order is ready for pickup! Thank you for using our service.`,
+          text: `Dear ${selectedOrder.firstName} ${selectedOrder.lastName},
+
+Your order is now ready for pickup!
+
+Order Details:
+${selectedOrder.items.map((item) => `${item.name} x ${item.quantity}: $${(item.price * item.quantity).toFixed(2)}`).join("\n")}
+
+Total: $${selectedOrder.total.toFixed(2)}
+
+Thank you for choosing our service. We look forward to serving you again soon!
+
+Best regards,
+The Gourmet Express Team`,
         }),
       })
-      toast.success("Order completed and email sent")
+
+      if (!emailResponse.ok) {
+        throw new Error("Failed to send email")
+      }
+
+      toast.success("Order completed and email sent to customer")
       setOrders(orders.filter((order) => order.id !== selectedOrder.id))
     } catch (error) {
       console.error("Error completing order:", error)
-      toast.error("Failed to complete order")
+      toast.error("Failed to complete order or send email")
     }
 
     setIsDialogOpen(false)
@@ -130,6 +150,9 @@ export default function OrderList() {
           <CardContent className="p-6">
             <div className="border-b border-gray-200 pb-4 mb-4">
               <h3 className="text-xl font-bold mb-2">Order #{order.id.slice(0, 8)}</h3>
+              <p className="text-sm text-gray-600 mb-1">
+                Name: {order.firstName} {order.lastName}
+              </p>
               <p className="text-sm text-gray-600 mb-1">Email: {order.userEmail}</p>
               <p className="text-sm text-gray-600 mb-1">Date: {new Date(order.date).toLocaleString()}</p>
               <div className="flex items-center text-sm text-yellow-600">
