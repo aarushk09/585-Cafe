@@ -40,8 +40,8 @@ export default function RecentOrders() {
         const data = snapshot.val()
         if (data) {
           const ordersArray = Object.entries(data).map(([id, order]) => ({
-            id,
             ...(order as Order),
+            id,
           }))
           setOrders(ordersArray.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()))
         } else {
@@ -104,4 +104,3 @@ export default function RecentOrders() {
     </div>
   )
 }
-
