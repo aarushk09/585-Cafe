@@ -21,7 +21,7 @@ export default function Login() {
     try {
       await signInWithEmailAndPassword(auth, email, password)
       router.push("/menu")
-    } catch (error) {
+    } catch {
       toast.error("Failed to log in. Please check your credentials.")
     }
   }
@@ -30,7 +30,7 @@ export default function Login() {
     try {
       await signInWithPopup(auth, googleProvider)
       router.push("/menu")
-    } catch (error) {
+    } catch {
       toast.error("Failed to log in with Google. Please try again.")
     }
   }
@@ -77,7 +77,7 @@ export default function Login() {
         </CardContent>
         <CardFooter>
           <p className="text-sm text-center w-full">
-            Don't have an account?{" "}
+            Don&apos;t have an account?{" "}
             <Link href="/signup" className="text-blue-500 hover:underline">
               Sign up
             </Link>

@@ -34,8 +34,7 @@ export default function Profile() {
             setGradeLevel(userData.gradeLevel || "")
           }
         })
-        .catch((error) => {
-          console.error("Error fetching user data:", error)
+        .catch(() => {
           toast.error("Failed to load profile data. Please try again.")
         })
     }
@@ -53,7 +52,7 @@ export default function Profile() {
         gradeLevel,
       })
       toast.success("Profile updated successfully")
-    } catch (error) {
+    } catch {
       toast.error("Failed to update profile. Please try again.")
     }
   }

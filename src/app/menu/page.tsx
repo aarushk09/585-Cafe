@@ -3,12 +3,13 @@
 import { useState, useEffect } from "react"
 import { useAuth } from "../AuthContext"
 import { database } from "../firebase"
-import { ref, set, onValue, push, get } from "firebase/database"
+import { ref, set, onValue, push } from "firebase/database"
 import { toast } from "react-hot-toast"
 import { ShoppingCart, Plus, Minus, Check } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
+import Image from "next/image"
 
 type MenuItem = {
   id: string
@@ -142,11 +143,6 @@ export default function Menu() {
     setIsCheckingOut(true)
 
     try {
-      // Fetch user data to get firstName and lastName
-      const userRef = ref(database, `users/${user.uid}`)
-      const userSnapshot = await get(userRef)
-      const userData = userSnapshot.val()
-
       // Save the order to recent orders
       const ordersRef = ref(database, `orders/${user.uid}`)
       const newOrderRef = push(ordersRef)
@@ -155,9 +151,7 @@ export default function Menu() {
         total: getTotalPrice(),
         date: new Date().toISOString(),
         userEmail: user.email,
-        firstName: userData.firstName || "",
-        lastName: userData.lastName || "",
-        isCompleted: false,
+        isCompleted: false, // Add this line
       }
       await set(newOrderRef, orderData)
 
@@ -215,7 +209,9 @@ Thank you for choosing Gourmet Express!`,
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {menuItems.map((item) => (
           <Card key={item.id} className="overflow-hidden">
-            <img src={item.image || "/placeholder.svg"} alt={item.name} className="w-full h-48 object-cover" />
+            <div className="relative w-full h-48">
+              <Image src={item.image || "/placeholder.svg"} alt={item.name} layout="fill" objectFit="cover" />
+            </div>
             <CardHeader>
               <CardTitle>{item.name}</CardTitle>
               <CardDescription>{item.description}</CardDescription>
