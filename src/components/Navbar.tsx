@@ -7,6 +7,7 @@ import { auth } from "../firebase"
 import { useRouter } from "next/navigation"
 import { User, LogOut, Coffee } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { isAdmin } from "../utils/adminUtils"
 
 export default function Navbar() {
   const { user, loading } = useAuth()
@@ -26,7 +27,7 @@ export default function Navbar() {
       <div className="container mx-auto px-4 py-4 flex justify-between items-center">
         <Link href="/" className="text-2xl font-bold text-gray-800 flex items-center">
           <Coffee className="mr-2 text-blue-600" />
-           585 Cafe
+          Gourmet Express
         </Link>
         <div className="space-x-4">
           {!loading && (
@@ -44,6 +45,11 @@ export default function Navbar() {
                       <User className="mr-2 h-4 w-4" /> Profile
                     </Link>
                   </Button>
+                  {user.email && isAdmin(user.email) && (
+                    <Button variant="ghost" asChild>
+                      <Link href="/admin">Admin</Link>
+                    </Button>
+                  )}
                   <Button variant="ghost" onClick={handleSignOut}>
                     <LogOut className="mr-2 h-4 w-4" /> Sign Out
                   </Button>

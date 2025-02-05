@@ -13,6 +13,11 @@ import { toast } from "react-hot-toast"
 import { ref, set } from "firebase/database"
 import type React from "react" // Added import for React
 
+const isAdmin = (email: string): boolean => {
+  // Add your admin email check logic here.  This is a placeholder.
+  return email === "admin@example.com"
+}
+
 export default function SignUp() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -26,6 +31,7 @@ export default function SignUp() {
       firstName,
       lastName,
       gradeLevel: "",
+      isAdmin: isAdmin(email), // Add this line
     })
   }
 
@@ -35,7 +41,7 @@ export default function SignUp() {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password)
       await createUserProfile(userCredential.user.uid, email, firstName, lastName)
       router.push("/menu")
-    } catch (error) {
+    } catch {
       toast.error("Failed to create an account. Please try again.")
     }
   }
@@ -53,7 +59,7 @@ export default function SignUp() {
       router.push("/menu")
     } catch (error) {
       console.error("Google sign-up error:", error)
-      toast.error(`Failed to sign up with Google: ${error.message}`)
+      toast.error(`Failed to sign up with Google: ${(error as Error).message}`)
     }
   }
 

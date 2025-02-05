@@ -3,10 +3,10 @@
 import { useState, useEffect } from "react"
 import { useAuth } from "../AuthContext"
 import { database } from "../firebase"
-import { ref, set, onValue, push } from "firebase/database"
+import { ref, set, onValue, push, get } from "firebase/database"
 import { toast } from "react-hot-toast"
 import { ShoppingCart, Plus, Minus, Check } from "lucide-react"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 
@@ -142,6 +142,11 @@ export default function Menu() {
     setIsCheckingOut(true)
 
     try {
+      // Fetch user data to get firstName and lastName
+      const userRef = ref(database, `users/${user.uid}`)
+      const userSnapshot = await get(userRef)
+      const userData = userSnapshot.val()
+
       // Save the order to recent orders
       const ordersRef = ref(database, `orders/${user.uid}`)
       const newOrderRef = push(ordersRef)
@@ -149,6 +154,10 @@ export default function Menu() {
         items: cart,
         total: getTotalPrice(),
         date: new Date().toISOString(),
+        userEmail: user.email,
+        firstName: userData.firstName || "",
+        lastName: userData.lastName || "",
+        isCompleted: false,
       }
       await set(newOrderRef, orderData)
 
@@ -164,13 +173,22 @@ export default function Menu() {
         },
         body: JSON.stringify({
           to: user.email,
-          subject: "Order Confirmation - 585 Cafe",
-          text: `Thank you for your order!\n\nOrder Details:\n${orderData.items.map((item) => `${item.name} x ${item.quantity}: $${(item.price * item.quantity).toFixed(2)}`).join("\n")}\n\nTotal: $${orderData.total.toFixed(2)}\n\nThank you for choosing 585 Cafe!`,
+          subject: "Order Confirmation - Gourmet Express",
+          text: `Thank you for your order!
+
+Order Details:
+${orderData.items.map((item) => `${item.name} x ${item.quantity}: $${(item.price * item.quantity).toFixed(2)}`).join("\n")}
+
+Total: $${orderData.total.toFixed(2)}
+
+Thank you for choosing Gourmet Express!`,
         }),
       })
 
       if (!emailResponse.ok) {
-        console.error("Failed to send email confirmation")
+        const errorData = await emailResponse.json()
+        console.error("Failed to send email confirmation:", errorData)
+        throw new Error("Failed to send email confirmation")
       }
 
       setOrderPlaced(true)
